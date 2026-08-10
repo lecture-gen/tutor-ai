@@ -103,9 +103,6 @@ jobs:
           FRONTEND_URL: "${{ secrets.FRONTEND_URL }}"
           EOF
 
-      - name: Show env.yaml
-        run: cat -A env.yaml
-
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy studyu-backend \
@@ -120,7 +117,7 @@ jobs:
         run: |
           gcloud run services describe studyu-backend \
             --region=${{ vars.GCP_REGION }} \
-            --format="yaml(spec.template.spec.containers[0].env)"
+            --format="yaml(metadata.name,status.url)"
 
   deploy-frontend:
     needs: changes
@@ -173,15 +170,9 @@ jobs:
             --port=3000
 
   deploy-hosting:
+    # Firebase Hosting은 사용하지 않으며, 직접 Cloud Run 배포만 사용한다.
     needs: [changes, deploy-frontend, deploy-backend]
-    if: |
-      always() &&
-      (needs.changes.outputs.hosting == 'true' ||
-       needs.changes.outputs.frontend == 'true' ||
-       needs.changes.outputs.backend == 'true' ||
-       inputs.force_hosting == true) &&
-      (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
-      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
